@@ -283,7 +283,7 @@ int main(int argc, char* argv[])
 			for (;;) {
 				printf("Temp folder already exists - is it okay to erase it?\n");
 				printf("Y/N >");
-				gets(szTmp);
+				gets_s(szTmp);
 				_strlwr(szTmp);
 				if (szTmp[0] == 'y') {
 					// and let's kill those temp files
@@ -310,9 +310,16 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	// excellente! Now, process those still images into the 192x128 on 256x192 images we need.
-	// mogrify.exe -resize 192x128^ -gravity Center -crop 192x128+0+0 +repage -gravity NorthWest -extent 256x192 *.png
-	sprintf(szTmp, "TOOLS\\mogrify -verbose -resize 192x128^ -gravity Center -crop 192x128+0+0 +repage -gravity NorthWest -extent 256x192 -sharpen 5x5 %s\\*.png", szTempPath);
+    // figure out how many cores to pass to dircmd
+   	int x = getNumberOfCores();
+	if (x<1) x=1;
+	if (x > 2) --x;		// save one core for the user
+    
+    // excellente! Now, process those still images into the 192x128 on 256x192 images we need.
+    // although mogrify can do a folder with a wildcard, we can do it faster with dircmd for cores
+    // This means we do lose error checking
+	// dircmd.exe -8 *.png mogrify.exe -resize 192x128^ -gravity Center -crop 192x128+0+0 +repage -gravity NorthWest -extent 256x192 "$f"
+	sprintf(szTmp, "TOOLS\\dircmd -%d %s\\*.png mogrify -verbose -resize 192x128^ -gravity Center -crop 192x128+0+0 +repage -gravity NorthWest -extent 256x192 -sharpen 5x5 \"%s\\$f\"", x, szTempPath, szTempPath);
 	if (0 != doExecuteCommand(szTmp)) {
 		printf("mogrify (ImageMagick) failed! Give up.\n");
 		return -1;
@@ -320,9 +327,6 @@ int main(int argc, char* argv[])
 
 	// now execute the image conversion on each frame. We will run a thread on each CPU core.
 	// dircmd.exe -8 scene*.png Convert9918 "$f" "out\$f"
-	int x = getNumberOfCores();
-	if (x<1) x=1;
-	if (x > 2) --x;		// save one core for the user
 	sprintf(szTmp, "TOOLS\\dircmd -%d %s\\scene*.png Convert9918 \"%s\\$f\" \"%s\\$f\"", x, szTempPath, szTempPath, szTempPath);
 	// no error return on this, so we just hope for the best. It should work if everything
 	// else did, as long as we don't run out of disk space.
@@ -413,7 +417,7 @@ int main(int argc, char* argv[])
 	printf("\n\nALL DONE! Raw output is 'finalPACK.bin'\n");
 
 	// now repack into a cartridge
-	sprintf(szTmp, "TOOLS\\cartrepack finalPACK.bin finalPACK8.bin", szTempPath);
+	sprintf(szTmp, "TOOLS\\cartrepack finalPACK.bin finalPACK8.bin");
 	if (0 != doExecuteCommand(szTmp)) {
 		printf("cartrepack failed! Give up.\n");
 		return -1;
@@ -428,7 +432,7 @@ int main(int argc, char* argv[])
 		printf("Do you want to save the temp files?\n");
 		printf("Answer YES if you might want to reprocess/repack for audio!\n");
 		printf("Y/N >");
-		gets(szTmp);
+		gets_s(szTmp);
 		_strlwr(szTmp);
 		if (szTmp[0] == 'n') {
 			// and let's kill those temp files

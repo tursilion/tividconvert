@@ -7,7 +7,8 @@
 
 char szFilename[MAX_PATH];
 char szTmp[MAX_PATH];
-char szBuf[1024*1024];		// 1MB should be plenty big
+const int bufSize=1024*1024;	// 1MB should be plenty big
+char szBuf[bufSize+1024];
 FILE *fp;
 const int INVALID_RETURN_CODE = 0xffff;
 const int EXECUTE_FAILED = 0xfffe;
@@ -141,7 +142,7 @@ int doExecuteCommand(char *pCmdLine) {
 			continue;
 		}
 
-		bSuccess = ReadFile(hChildStdoutRd, &szBuf[nPosition], 1024*1024 - nPosition, &dwRead, NULL);
+		bSuccess = ReadFile(hChildStdoutRd, &szBuf[nPosition], bufSize - nPosition, &dwRead, NULL);
 		if (!bSuccess) {
 			if (ERROR_MORE_DATA != GetLastError()) {
 				break;
@@ -157,7 +158,7 @@ int doExecuteCommand(char *pCmdLine) {
 		nPosition = nLength;
 		nPrinted = nLength;
 
-		if (nPosition > 1024*1024-10) {
+		if (nPosition > bufSize-10) {
 			printf("** Out of text buffer - preserving first 5k and wrapping the rest.\n");
 			nPosition = 5*1024;
 		}
@@ -187,7 +188,7 @@ int doExecuteCommand(char *pCmdLine) {
 			break;
 		}
 
-		bSuccess = ReadFile(hChildStdoutRd, &szBuf[nPosition], (1024*1024) - nPosition, &dwRead, NULL);
+		bSuccess = ReadFile(hChildStdoutRd, &szBuf[nPosition], bufSize - nPosition, &dwRead, NULL);
 		if ((!bSuccess)||(0 == dwRead)) {
 			if (ERROR_MORE_DATA != GetLastError()) {
 				break;
@@ -200,7 +201,7 @@ int doExecuteCommand(char *pCmdLine) {
 		nPosition = nLength;
 		nPrinted = nLength;
 
-		if (nPosition > 1024*1024-10) {
+		if (nPosition > bufSize-10) {
 			printf("** Out of text buffer - preserving first 5k and wrapping the rest.\n");
 			nPosition = 5*1024;
 		}

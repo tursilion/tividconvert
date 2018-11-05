@@ -304,7 +304,9 @@ int main(int argc, char* argv[])
 
 	// spawn ffmpeg and extract the still images we need
 	// ffmpeg.exe -i spaceballs.mp4 -f image2 -vf fps=8.9132 scene%05d.png
-	sprintf(szTmp, "TOOLS\\ffmpeg -y -i %s -f image2 -vf fps=8.9132 %s\\scene%%05d.png", szFilename, szTempPath);
+//	sprintf(szTmp, "TOOLS\\ffmpeg -y -i %s -f image2 -vf fps=8.9132 %s\\scene%%05d.png", szFilename, szTempPath);
+   	sprintf(szTmp, "TOOLS\\ffmpeg -y -i %s -f image2 -vf fps=8.6458 %s\\scene%%05d.png", szFilename, szTempPath);
+
 	if (0 != doExecuteCommand(szTmp)) {
 		printf("ffmpeg failed! Give up.\n");
 		return -1;

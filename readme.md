@@ -16,6 +16,14 @@ Spaceballs - [https://www.youtube.com/watch?v=j_J7LHCgOfc](https://www.youtube.c
 
 Ponies - [https://www.youtube.com/watch?v=27YzCSBq9kg](https://www.youtube.com/watch?v=27YzCSBq9kg)
 
+Last Updates
+------------
+11/5/2018 
+- new playback routines support gigacarts up to 512MB
+- now plays at correct rate on real hardware (optimizations + slight frame rate adjustment)
+- joystick 1 can be used to fast forward/reverse/pause
+- QUIT now works during playback
+
 Want to donate?
 ---------------
 

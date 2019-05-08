@@ -64,19 +64,24 @@ del testout.raw
 Changes:
 ---------------------------------------------
 3/21/2015:
--Added proper support for non-widescreen aspect ratios. Everything should now properly scale to fit the screen (no more white bars on the right).
--Added F18A GPU enhanced playback. This is autodetected and (currently) can not be defeated (plan is for the later final version to have a key or config override). It is not yet tested on hardware, any feedback is helpful!
--Updates to cartrepack and both versions of the playback code to account for the above.
+- Added proper support for non-widescreen aspect ratios. Everything should now properly scale to fit the screen (no more white bars on the right).
+- Added F18A GPU enhanced playback. This is autodetected and (currently) can not be defeated (plan is for the later final version to have a key or config override). It is not yet tested on hardware, any feedback is helpful!
+- Updates to cartrepack and both versions of the playback code to account for the above.
 
 ---------------------------------------------
 3/22/2015:
--More fixes to cartrepack to make larger cartridges loop more cleanly
+- More fixes to cartrepack to make larger cartridges loop more cleanly
 
 ---------------------------------------------
 2/5/2017:
--Quick fix to make videos loop cleanly rather than run off the end of the cart
+- Quick fix to make videos loop cleanly rather than run off the end of the cart
 
 ---------------------------------------------
 11/4/2018
--updated with new player that handles 512MB cartridges and plays back at the correct
+- updated with new player that handles 512MB cartridges and plays back at the correct
 rate even on hardware.
+
+---------------------------------------------
+5/7/2019
+- source script updated with VideoDespeckle tool for final output
+- You can also run VideoDespeckle on any cart binary you've previously created!

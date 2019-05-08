@@ -18,11 +18,9 @@ Ponies - [https://www.youtube.com/watch?v=27YzCSBq9kg](https://www.youtube.com/w
 
 Last Updates
 ------------
-11/5/2018 
-- new playback routines support gigacarts up to 512MB
-- now plays at correct rate on real hardware (optimizations + slight frame rate adjustment)
-- joystick 1 can be used to fast forward/reverse/pause
-- QUIT now works during playback
+5/7/2019
+- source script updated with VideoDespeckle tool for final output
+- You can also run VideoDespeckle on any cart binary you've previously created!
 
 Want to donate?
 ---------------

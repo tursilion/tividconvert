@@ -259,8 +259,7 @@ int main(int argc, char* argv[])
 		printf("tividconvert <inputvideo>\n");
 		printf("Inputvideo is any supported by FFMPEG\n");
 		printf("Both a raw file and a cart file will be generated.\n");
-		printf("For a bank-switched cart. The maximum size is 4096 pages\n");
-		printf("(Although the current maximum size is 2MB (256 pages)\n");
+		printf("For a bank-switched cart. The maximum size is 16384 pages (128MB)\n");
 		return -1;
 	}
 
@@ -425,6 +424,14 @@ int main(int argc, char* argv[])
 		printf("cartrepack failed! Give up.\n");
 		return -1;
 	}
+
+    // despeckle the output cart if we can
+	sprintf(szTmp, "TOOLS\\VideoDespeckle finalPACK8.bin");
+	if (0 != doExecuteCommand(szTmp)) {
+		printf("cartrepack failed! Give up.\n");
+		return -1;
+	}
+
 	printf("\n\nALL DONE! Cart output is 'finalPACK8.bin'\n");
 
 	// delete local temp file

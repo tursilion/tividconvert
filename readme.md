@@ -25,6 +25,6 @@ Last Updates
 Want to donate?
 ---------------
 
-- Click here for [Paypal](https://PayPal.Me/tursilion)...
+- Click here for [Ko-Fi](https://ko-fi.com/tursilion)...
 - Alternately, there's my [Amazon Wishlist](http://www.amazon.com/gp/registry/2AFCOAM5DD1L6/ref=cm_aya_wl/103-5991996-6483001)
 

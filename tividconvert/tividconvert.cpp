@@ -412,7 +412,7 @@ int main(int argc, char* argv[])
 	// Duration: 30.02 (from ffmpeg) seconds
 	// Actual output - 268 frames * 1544 bytes per frame = 413792 bytes.
 	// 413792 / 30.02 = 13783.8774 (round up) = 13784 Hz. (Usually want to round up.)
-	int finalFreq;
+	int finalFreq; 
     if (mono) {
         // in mono mode, there are twice as many frames, so half as many bytes - the end result should be the same
         finalFreq = (int)(frameCnt * 772 / duration + 0.5);

@@ -255,11 +255,18 @@ void delfiles(char *szPath) {
 
 int main(int argc, char* argv[])
 {
+    bool mono = false;
+    bool useini = false;
+
+    printf("tividconvert version 20220720\n");
+
 	if (argc < 2) {
-		printf("tividconvert <inputvideo>\n");
+		printf("tividconvert <inputvideo> [-mono] [-useini]\n");
 		printf("Inputvideo is any supported by FFMPEG\n");
 		printf("Both a raw file and a cart file will be generated.\n");
 		printf("For a bank-switched cart. The maximum size is 16384 pages (128MB)\n");
+        printf("The -mono switch will generate a double-frame rate mono-only video\n");
+        printf("If -useini is present, default settings are not enforced on convert9918. Make sure your ini is write-protected and in the tools folder\n");
 		return -1;
 	}
 
@@ -272,6 +279,17 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 	fclose(fp);
+
+    for (int idx=2; idx<argc; ++idx) {
+        if (0 == strcmp(argv[idx],"-mono")) {
+            printf("Doing monochrome...\n");
+            mono=true;
+        }
+        if (0 == strcmp(argv[idx],"-useini")) {
+            printf("Using existing INI\n");
+            useini=true;
+        }
+    }
 
 	// create a temporary work folder
 	if (!CreateDirectory(szTempPath, NULL)) {
@@ -303,9 +321,12 @@ int main(int argc, char* argv[])
 	}
 
 	// spawn ffmpeg and extract the still images we need
-	// ffmpeg.exe -i spaceballs.mp4 -f image2 -vf fps=8.9132 scene%05d.png
-//	sprintf(szTmp, "TOOLS\\ffmpeg -y -i %s -f image2 -vf fps=8.9132 %s\\scene%%05d.png", szFilename, szTempPath);
-   	sprintf(szTmp, "TOOLS\\ffmpeg -y -i %s -f image2 -vf fps=8.6458 %s\\scene%%05d.png", szFilename, szTempPath);
+	// ffmpeg.exe -i spaceballs.mp4 -f image2 -vf fps=8.6458 scene%05d.png
+    if (mono) {
+   	    sprintf(szTmp, "TOOLS\\ffmpeg -y -i %s -f image2 -vf fps=17.2916 %s\\scene%%05d.png", szFilename, szTempPath);
+    } else {
+   	    sprintf(szTmp, "TOOLS\\ffmpeg -y -i %s -f image2 -vf fps=8.6458 %s\\scene%%05d.png", szFilename, szTempPath);
+    }
 
 	if (0 != doExecuteCommand(szTmp)) {
 		printf("ffmpeg failed! Give up.\n");
@@ -329,7 +350,13 @@ int main(int argc, char* argv[])
 
 	// now execute the image conversion on each frame. We will run a thread on each CPU core.
 	// dircmd.exe -8 scene*.png Convert9918 "$f" "out\$f"
-	sprintf(szTmp, "TOOLS\\dircmd -%d %s\\scene*.png Convert9918 \"%s\\$f\" \"%s\\$f\"", x, szTempPath, szTempPath, szTempPath);
+    if (useini) {
+    	sprintf(szTmp, "TOOLS\\dircmd -%d %s\\scene*.png Convert9918 \"%s\\$f\" \"%s\\$f\"", x, szTempPath, szTempPath, szTempPath);
+    } else if (mono) {
+        sprintf(szTmp, "TOOLS\\dircmd -%d %s\\scene*.png Convert9918 /CtrlList=2 /OrderSlide=6 /OrderedDither=2 /Filter=0 /PowerPaint=0 /PortraitMode=0 /AccumulateErrors=0 /MapSize=4 /LumaEmphasis=1200 /Gamma=900 /PixelOffset=0 /HeightOffset=0 /ScaleMode=1 \"%s\\$f\" \"%s\\$f\"", x, szTempPath, szTempPath, szTempPath);
+    } else {
+        sprintf(szTmp, "TOOLS\\dircmd -%d %s\\scene*.png Convert9918 /CtrlList=0 /OrderSlide=6 /OrderedDither=2 /Filter=0 /PowerPaint=0 /PortraitMode=0 /AccumulateErrors=0 /MapSize=4 /LumaEmphasis=1200 /Gamma=900 /PixelOffset=0 /HeightOffset=0 /ScaleMode=1 \"%s\\$f\" \"%s\\$f\"", x, szTempPath, szTempPath, szTempPath);
+    }
 	// no error return on this, so we just hope for the best. It should work if everything
 	// else did, as long as we don't run out of disk space.
 	doExecuteCommand(szTmp);
@@ -385,7 +412,13 @@ int main(int argc, char* argv[])
 	// Duration: 30.02 (from ffmpeg) seconds
 	// Actual output - 268 frames * 1544 bytes per frame = 413792 bytes.
 	// 413792 / 30.02 = 13783.8774 (round up) = 13784 Hz. (Usually want to round up.)
-	int finalFreq = (int)(frameCnt * 1544 / duration + 0.5);
+	int finalFreq;
+    if (mono) {
+        // in mono mode, there are twice as many frames, so half as many bytes - the end result should be the same
+        finalFreq = (int)(frameCnt * 772 / duration + 0.5);
+    } else {
+        finalFreq = (int)(frameCnt * 1544 / duration + 0.5);
+    }
 
 	// report what we learned
 	printf("Final is %d frames with a duration of %g, freq %dHz\n", frameCnt, duration, finalFreq);
@@ -409,28 +442,45 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	// Now all conversions are done, we just need to pack:
-	// videopack out\scene audio.bin finalPACK.bin
-	sprintf(szTmp, "TOOLS\\videopack %s\\scene %s\\audio.bin finalPACK.bin", szTempPath, szTempPath);
-	if (0 != doExecuteCommand(szTmp)) {
-		printf("videopack failed! Give up.\n");
-		return -1;
-	}
-	printf("\n\nALL DONE! Raw output is 'finalPACK.bin'\n");
+    // Now all conversions are done, we just need to pack:
+    if (mono) {
+	    // videopack out\scene audio.bin finalPACK.bin
+	    sprintf(szTmp, "TOOLS\\videopack %s\\scene %s\\audio.bin finalPACK.bin -mono", szTempPath, szTempPath);
+	    if (0 != doExecuteCommand(szTmp)) {
+		    printf("videopack failed! Give up.\n");
+		    return -1;
+	    }
+	    printf("\n\nALL DONE! Raw output is 'finalPACK.bin'\n");
 
-	// now repack into a cartridge
-	sprintf(szTmp, "TOOLS\\cartrepack finalPACK.bin finalPACK8.bin");
-	if (0 != doExecuteCommand(szTmp)) {
-		printf("cartrepack failed! Give up.\n");
-		return -1;
-	}
+	    // now repack into a cartridge
+	    sprintf(szTmp, "TOOLS\\cartrepack finalPACK.bin finalPACK8.bin -mono");
+	    if (0 != doExecuteCommand(szTmp)) {
+		    printf("cartrepack failed! Give up.\n");
+		    return -1;
+	    }
+    } else {
+	    // videopack out\scene audio.bin finalPACK.bin
+	    sprintf(szTmp, "TOOLS\\videopack %s\\scene %s\\audio.bin finalPACK.bin", szTempPath, szTempPath);
+	    if (0 != doExecuteCommand(szTmp)) {
+		    printf("videopack failed! Give up.\n");
+		    return -1;
+	    }
+	    printf("\n\nALL DONE! Raw output is 'finalPACK.bin'\n");
 
-    // despeckle the output cart if we can
-	sprintf(szTmp, "TOOLS\\VideoDespeckle finalPACK8.bin");
-	if (0 != doExecuteCommand(szTmp)) {
-		printf("cartrepack failed! Give up.\n");
-		return -1;
-	}
+	    // now repack into a cartridge
+	    sprintf(szTmp, "TOOLS\\cartrepack finalPACK.bin finalPACK8.bin");
+	    if (0 != doExecuteCommand(szTmp)) {
+		    printf("cartrepack failed! Give up.\n");
+		    return -1;
+	    }
+
+        // despeckle the output cart if we can
+	    sprintf(szTmp, "TOOLS\\VideoDespeckle finalPACK8.bin");
+	    if (0 != doExecuteCommand(szTmp)) {
+		    printf("cartrepack failed! Give up.\n");
+		    return -1;
+	    }
+    }
 
 	printf("\n\nALL DONE! Cart output is 'finalPACK8.bin'\n");
 
